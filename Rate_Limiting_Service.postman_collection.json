@@ -1,0 +1,531 @@
+{
+	"info": {
+		"_postman_id": "rate-limiting-service-collection",
+		"name": "Rate Limiting Service API",
+		"description": "Complete API collection for testing the Rate Limiting Service with examples",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "System Health",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success field', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Check system health including MySQL and Redis connections"
+					}
+				},
+				{
+					"name": "Ping",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ping",
+							"host": ["{{baseUrl}}"],
+							"path": ["ping"]
+						},
+						"description": "Simple ping endpoint to check if service is alive"
+					}
+				}
+			]
+		},
+		{
+			"name": "Rate Limit Management",
+			"item": [
+				{
+					"name": "Create Rate Limit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains created rate limit', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('apiKey');",
+									"    pm.expect(jsonData.data).to.have.property('requestLimit');",
+									"    pm.expect(jsonData.data).to.have.property('windowSeconds');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"apiKey\": \"{{testApiKey}}\",\n  \"limit\": 10,\n  \"windowSeconds\": 60\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/limits",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "limits"]
+						},
+						"description": "Create a new rate limit rule for an API key"
+					}
+				},
+				{
+					"name": "Update Rate Limit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"apiKey\": \"{{testApiKey}}\",\n  \"limit\": 20,\n  \"windowSeconds\": 60\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/limits",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "limits"]
+						},
+						"description": "Update an existing rate limit rule"
+					}
+				},
+				{
+					"name": "Get All Rate Limits",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains paginated data', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('content');",
+									"    pm.expect(jsonData.data).to.have.property('totalElements');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/limits?page=0&size=20&sort=createdAt,desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "limits"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "createdAt,desc"
+								}
+							]
+						},
+						"description": "Get all rate limits with pagination support"
+					}
+				},
+				{
+					"name": "Get Specific Rate Limit",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/limits/{{testApiKey}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "limits", "{{testApiKey}}"]
+						},
+						"description": "Get rate limit configuration for a specific API key"
+					}
+				},
+				{
+					"name": "Delete Rate Limit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response indicates successful deletion', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/limits/{{testApiKey}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "limits", "{{testApiKey}}"]
+						},
+						"description": "Delete a rate limit rule"
+					}
+				}
+			]
+		},
+		{
+			"name": "Rate Limit Testing",
+			"item": [
+				{
+					"name": "Check API Access - First Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Request is allowed', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.allowed).to.be.true;",
+									"    pm.expect(jsonData.data.currentUsage).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/check?apiKey={{testApiKey}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "check"],
+							"query": [
+								{
+									"key": "apiKey",
+									"value": "{{testApiKey}}"
+								}
+							]
+						},
+						"description": "Test the first API access - should be allowed"
+					}
+				},
+				{
+					"name": "Multiple API Checks (Trigger Rate Limit)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// This will be run before each iteration",
+									"console.log('Making request #' + (pm.iteration + 1));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response received', function () {",
+									"    pm.response.to.be.ok;",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"console.log(`Request ${pm.iteration + 1}: ${jsonData.success ? 'ALLOWED' : 'BLOCKED'} - Usage: ${jsonData.data ? jsonData.data.currentUsage : 'N/A'}`);",
+									"",
+									"if (pm.response.code === 429) {",
+									"    pm.test('Rate limit exceeded response', function () {",
+									"        pm.expect(jsonData.success).to.be.false;",
+									"        pm.expect(jsonData).to.have.property('error');",
+									"    });",
+									"} else {",
+									"    pm.test('Request allowed', function () {",
+									"        pm.expect(jsonData.success).to.be.true;",
+									"        pm.expect(jsonData.data.allowed).to.be.true;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/check?apiKey={{testApiKey}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "check"],
+							"query": [
+								{
+									"key": "apiKey",
+									"value": "{{testApiKey}}"
+								}
+							]
+						},
+						"description": "Run this multiple times to trigger rate limiting (use Runner with iterations)"
+					}
+				},
+				{
+					"name": "Check Usage Info",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Usage info retrieved', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('currentUsage');",
+									"    pm.expect(jsonData.data).to.have.property('remainingQuota');",
+									"    pm.expect(jsonData.data).to.have.property('totalLimit');",
+									"    ",
+									"    console.log(`Current Usage: ${jsonData.data.currentUsage}/${jsonData.data.totalLimit}`);",
+									"    console.log(`Remaining: ${jsonData.data.remainingQuota}`);",
+									"    console.log(`Window TTL: ${jsonData.data.windowTtl} seconds`);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/usage?apiKey={{testApiKey}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "usage"],
+							"query": [
+								{
+									"key": "apiKey",
+									"value": "{{testApiKey}}"
+								}
+							]
+						},
+						"description": "Get current usage statistics for an API key"
+					}
+				},
+				{
+					"name": "Unknown API Key Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Request blocked for unknown key', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.allowed).to.be.false;",
+									"    pm.expect(jsonData.data.reason).to.equal('API key not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/check?apiKey=unknown-key",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "check"],
+							"query": [
+								{
+									"key": "apiKey",
+									"value": "unknown-key"
+								}
+							]
+						},
+						"description": "Test with an unknown API key - should be blocked"
+					}
+				}
+			]
+		},
+		{
+			"name": "Error Cases",
+			"item": [
+				{
+					"name": "Invalid Rate Limit Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Validation error response', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"apiKey\": \"\",\n  \"limit\": -1,\n  \"windowSeconds\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/limits",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "limits"]
+						},
+						"description": "Test with invalid request data - should return validation errors"
+					}
+				},
+				{
+					"name": "Missing API Key Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Missing parameter error', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"    pm.expect(jsonData.error).to.include('required');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/check",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "check"]
+						},
+						"description": "Test check endpoint without apiKey parameter"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string",
+			"description": "Base URL for the Rate Limiting Service"
+		},
+		{
+			"key": "testApiKey",
+			"value": "postman-test-key",
+			"type": "string",
+			"description": "Test API key for running the collection"
+		}
+	]
+}
